@@ -3,6 +3,7 @@
 #include <hgesprite.h>
 #include <atlbase.h>
 #include <cstdio>
+#include <stdarg.h>
 #pragma comment(linker,"/NODEFAULTLIB:libc.lib")
 /*
 __inline float _floor(float f)
@@ -98,8 +99,11 @@ public:
 		//Render(x, y, CA2W(sBuffer));
 
 		wchar_t sBuffer[10240] = { 0 };
-		wchar_t *lpsArg = (wchar_t *)&format + sizeof(format);
-		wprintf(sBuffer, format, lpsArg);
+		va_list lpsArg;
+		va_start(lpsArg, format);
+		// wchar_t* lpsArg=(wchar_t*)&format+sizeof(format);
+		// wprintf(sBuffer, format);
+		vswprintf_s(sBuffer, 10240, format, lpsArg);
 		Render(x, y, sBuffer);
 
 	}

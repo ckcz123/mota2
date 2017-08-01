@@ -108,25 +108,18 @@ void c_monster::printInfo()
 		f->Print(consts.ScreenLeft+consts.map_width*32+16, py, L"%s%s", name, s0);
 		delete f;
 
-		char s1[100] = "";
-
-		if (consts.total_point >= 0)
-			sprintf_s(s1, "+%d", consts.total_point);
-		else
-			sprintf_s(s1, "%d", consts.total_point);
-
 		py+=32;
 		consts.s_heart->Render(consts.ScreenLeft+consts.map_width*32+16, py);
 		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%d", hp);
 		py+=32;
 		consts.s_sword1->Render(consts.ScreenLeft+consts.map_width*32+16, py);
-		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%d (%d%s)", getAtk(), atk, s1);
+		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%-6d(%d%+d)", getAtk(), atk, consts.total_point);
 		py+=32;
 		consts.s_shield1->Render(consts.ScreenLeft+consts.map_width*32+16, py);
-		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%d (%d%s)", getDef(), def, s1);
+		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%-6d(%d%+d)", getDef(), def, consts.total_point);
 		py+=32;
 		consts.s_coin->Render(consts.ScreenLeft+consts.map_width*32+16, py);
-		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%d (/3=%d)", money, money/3);
+		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%d", money);
 		py+=32;
 		consts.s_damage->Render(consts.ScreenLeft+consts.map_width*32+16, py);
 		int damage=hero.getDamage(*this);

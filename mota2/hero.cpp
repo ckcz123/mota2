@@ -8,9 +8,6 @@ c_hero::c_hero()
 	dir[0][0]=dir[0][3]=dir[1][1]=dir[1][2]=0;
 	dir[0][1]=dir[1][3]=-1;
 	dir[0][2]=dir[1][0]=1;
-	for (int i = 0; i < 4; i++)
-		for (int j = 0; j < 4; j++)
-			sprites[i][j] = new hgeSprite(consts.ht_hero, 32 * i, 33 * j, 32, 33);
 };
 void c_hero::init()
 {
@@ -21,6 +18,9 @@ void c_hero::init()
 	y=12;
 	face=3;
 	move=0;
+	for (int i=0; i<4; i++)
+		for (int j=0; j<4; j++)
+			sprites[i][j]=new hgeSprite(consts.ht_hero, 32*i, 33*j, 32, 33);
 }
 float c_hero::nextX()
 {
@@ -55,7 +55,7 @@ bool c_hero::moveComplete()
 			consts.hge->Effect_PlayEx(consts.he_GetItem, consts.volume);
 		switch (item)
 		{
-		case 31: consts.setMsg(L"获得神秘六芒星！\n你可以支付任意点攻击或防\n御值，使全场怪兽攻防下降\n支付点数的一半。\n\n[X]键使用。"); break;
+		case 31: consts.setMsg(L"获得神秘六芒星！\n你可以支付任意点攻击或防御值，使\n全场怪兽攻防下降支付点数的一半。\n\n[X]键使用。"); break;
 		default: break;
 		}
 		consts.step++;
