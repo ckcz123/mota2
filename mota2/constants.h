@@ -6,22 +6,21 @@
 struct savedata
 {
 	int hp, atk, def;
-	void init(int _hp, int _atk, int _def, int _nowf) { hp=_hp; atk=_atk; def=_def; }
+	void init(int _hp, int _atk, int _def) { hp=_hp; atk=_atk; def=_def; }
 };
 
 class constants
 {
 public:
 	static const int MESSAGE_NONE=0;
-	static const int MESSAGE_QUIT=1;
-	static const int MESSAGE_RESTART=2;
-	static const int MESSAGE_SAVE=3;
-	static const int MESSAGE_LOAD=4;
-	static const int MESSAGE_WIN=5;
-	static const int MESSAGE_NPC=6;
-	static const int MESSAGE_ITEM=7;
-	static const int MESSAGE_RANK=8;
-	static const int MESSAGE_HINT=9;
+	static const int MESSAGE_RESTART=1;
+	static const int MESSAGE_SAVE=2;
+	static const int MESSAGE_LOAD=3;
+	static const int MESSAGE_WIN=4;
+	static const int MESSAGE_ITEM=5;
+	static const int MESSAGE_RANK=6;
+	static const int MESSAGE_HINT=7;
+	static const int MESSAGE_POINT=8;
 
 	constants();
 	void init();
@@ -29,10 +28,11 @@ public:
 	void destroy();
 	void setMsg(const wchar_t* [50]);
 	void setMsg(const wchar_t*);
-	bool isFree() { return !moving && msg==MESSAGE_NONE; }
+	bool isFree() { return !moving && !opening && msg==MESSAGE_NONE; }
 	void goOn(c_hero*, c_map_floor*, float);
 	void save(FILE*);
 	void load(FILE*);
+	void load(constants* another);
 	void printInfo();
 
 	int msg;
@@ -43,16 +43,23 @@ public:
 	float playtime;
 	int step;
 
-	bool book, item, moving, music;
+	bool book, item, moving, music, opening;
 	int map_height, map_width, volume, bgmvolume, ScreenLeft;
+
+	// 使用道具
+	int item_choose, item_point;
+
+	// 当前点数
+	int curr_point, total_point;
 
 	savedata sd[100];
 	int wanttosave;
 
-	// 正在战斗的怪物
-	c_monster *monster_battling;
-	// 正在战斗怪物的原始生命值
-	int monster_life;
+	// 正在开的门
+	c_map_door *map_openingdoor;
+
+	// 正在对话的npc
+	c_map_npc *map_npc;
 
 	// HGE
 	HGE *hge;

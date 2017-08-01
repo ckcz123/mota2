@@ -16,6 +16,8 @@ void constants::init()
 	playtime=0.0;
 	step=0;
 	time_move=time_open=time_animation=time_battle=time_floor=0;
+	item_choose = item_point = 0;
+	curr_point = total_point = 0;
 	isMyTurn=true;
 	beatStarted=false;
 	for (int i=0; i<100; i++) sd[i].hp=0;
@@ -95,18 +97,18 @@ void constants::goOn(c_hero* hero, c_map_floor* currFloor, float dt)
 	if (moving) // 移动
 	{
 		time_move+=dt;
-		if (time_move>=0.03)
+		if (time_move>=0.03f)
 		{
-			time_move-=0.03;
+			time_move-=0.03f;
 			if (hero->moveComplete())
 				moving=false;
 		}
 	}
 	
 	time_animation+=dt;
-	if (time_animation>=0.1) // 四次后又回到自身状态
+	if (time_animation>=0.1f) // 四次后又回到自身状态
 	{
-		time_animation-=0.1;
+		time_animation-=0.1f;
 		currFloor->animation();
 	}
 }
@@ -124,14 +126,24 @@ void constants::printInfo()
 
 void constants::save(FILE* f)
 {
-	fprintf_s(f, "%d %d %d %d %d %.2f\n", map_width, map_height, book?1:0, item?1:0, step, playtime);
+	fprintf_s(f, "%d %d %d %d %d %d %.2f\n", map_width, map_height, total_point, book?1:0, item?1:0, step, playtime);
 }
 
 void constants::load(FILE* f)
 {
 	int _book, _item;
-	fscanf_s(f, "%d %d %d %d %d %f", &map_width, &map_height, &_book, &_item, &step, &playtime);
+	fscanf_s(f, "%d %d %d %d %d %d %f", &map_width, &map_height, &total_point, &_book, &_item, &step, &playtime);
 	book=_book==1;
 	item=_item==1;
 	moving=false;
+}
+
+void constants::load(constants* another) {
+	map_width = another->map_width;
+	map_height = another->map_height;
+	total_point = another->total_point;
+	book = another->book;
+	item = another->item;
+	step = another->step;
+	playtime = another->playtime;
 }

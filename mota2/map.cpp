@@ -4,10 +4,29 @@ extern c_map_floor map_floor[50];
 extern c_hero hero;
 extern constants consts;
 
+/***** 地图数据 *****/
+const int map[30][30] = {
+	{11,11,11,11,11,11,99,11,11,11,11,11,11},
+	{11,81,10,82,10,83,24,84,10,85,10,86,11},
+	{11,10,10,10,10,10,10,10,10,10,10,10,11},
+	{11,75,10,76,10,77,10,78,10,79,10,80,11},
+	{11,10,10,10,10,10,10,10,10,10,10,10,11},
+	{11,69,10,70,10,71,10,72,10,73,10,74,11},
+	{11,10,10,10,10,10,31,10,10,10,10,10,11},
+	{11,63,10,64,10,65,10,66,10,67,10,68,11},
+	{11,10,10,10,10,10,10,10,10,10,10,10,11},
+	{11,57,10,58,10,59,10,60,10,61,10,62,11},
+	{11,10,10,10,10,10,10,10,10,10,10,10,11},
+	{11,51,10,52,10,53,41,54,10,55,10,56,11},
+	{11,11,11,11,11,11,10,11,11,11,11,11,11},
+};
+/***** 地图数据 *****/
+
 void c_map_door::init(int t)
 {
 	type=t;
-	for (int i=0; i<4; i++) door[i]=new hgeSprite(consts.ht_map, 32*(t-11), 32*(i+2), 32, 32);
+	for (int i=0; i<4; i++) door[i]=new hgeSprite(consts.ht_map, 32*(t-21), 32*(i+2), 32, 32);
+	opened = false;
 	state=0;
 }
 void c_map_door::show(int i, int j)
@@ -24,84 +43,100 @@ bool c_map_door::open()
 	}
 	return false;
 }
-void c_map_point::init(hgeSprite *s_type, hgeSprite *s_item, int s_monster, int s_door)
+void c_map_point::init(int s_type,int s_item, int s_monster, int s_door, int s_npc)
 {
-	//if (s_item!=NULL || s_monster!=0 || s_door!=0) type=consts.s_ground;
-	if (s_type==NULL) type=consts.s_ground;
-	else type=s_type;
+	type=s_type;
 	item=s_item;
 	monster.init(s_monster);
 	door.init(s_door);
-	npc.init(s_door);
+	npc.init(s_npc);
 }
 void c_map_point::show(GfxFont* f, int i, int j)
 {
-	type->Render(j*32+consts.ScreenLeft, i*32);
-	if (item!=NULL) item->Render(j*32+consts.ScreenLeft, i*32);
+	(type==11?consts.s_wall:consts.s_ground)->Render(j*32+consts.ScreenLeft, i*32);
+	if (item==31) consts.s_floor->Render(j*32+consts.ScreenLeft, i*32);
 	monster.show(f, i, j);
 	door.show(i, j);
 	npc.show(i, j);
 }
 bool c_map_point::canMove(int f)
 {
-	if (type==consts.s_ground)
+	if (type==10)
 	{
 		if (door.getType()!=0)
 		{
-			bool c=false;
-			switch (door.getType())
-			{
-			case 1:c=hero.openYellowDoor(); break;
-			case 2:c=hero.openBlueDoor(); break;
-			case 3:c=hero.openRedDoor(); break;
-			case 8:case 9:c=hero.openSpecialDoor(); break;
-			case 4:hero.upstair(); break;
-			case 5:hero.downstair(); break;
-			}
-			if (door.getType()>=40&&door.getType()<=80) {
-				consts.msg=consts.MESSAGE_NPC;
-				return false;
-			}
-			if (c)
+			return false;
+			
+
+			if (true)
 			{
 				consts.opening=true;
 				consts.map_openingdoor=&door;
 				if (consts.music)
 					consts.hge->Effect_PlayEx(consts.he_OpenDoor, consts.volume);
 			}
-			return c;
+			return false;
+
 		}
 		if (monster.getId()!=0)
 		{
 			if (hero.canBeat(monster))
 			{
-				consts.battling=true;
-				consts.monster_battling=&monster;
+
+				// beat here!
+				if (consts.music)
+					consts.hge->Effect_PlayEx(consts.he_Attack, consts.volume);
+
+				int point = monster.getMoney(), id=monster.getId();
+				monster.init(0);
+
+				// 打死了boss
+				if (id == 99) {
+					consts.msg = consts.MESSAGE_WIN;
+				}
+				else {
+					consts.curr_point = point;
+					consts.total_point += point / 3;
+					consts.msg = consts.MESSAGE_POINT;
+
+					// 全部杀完？
+					int left = 0;
+					for (int i = 0; i < consts.map_height; i++) {
+						for (int j = 0; j < consts.map_width; j++) {
+							if (map_floor[0].getinfo(i, j)->monster.getId() != 0)
+								left++;
+						}
+					}
+					if (left == 1) {
+						consts.opening = true;
+						consts.map_openingdoor = &(map_floor[0].getinfo(1, 6)->door);
+					}
+
+				}
+
 			}
 			return false;
 		}
-		if (special!=0)
-		{
-			if (special==207) {
-				if (hero.getNowFloor()<30) {
-					special=208;
-					consts.setMsg("我：\n这里竟然有个暗墙？后面还有\n个暗道？走，进去看看！");
-					return false;
-				}
-				else {
-					special=0;
-					return true;
-				}
+		if (npc.getId()!=0) {
+
+			consts.map_npc = &npc;
+
+			if (npc.getId() == 41) {
+				
+				consts.book = true;
+				const wchar_t* msg[50] = {
+					L"欢迎来到这个可变加点塔，\n请仔细阅读以下说明。\n怪物手册请收好，可将鼠标\n放在怪物上查看怪物属性。\n\n[ENTER] 下一页",
+					L"本塔共36+1个怪，清空外围\n36个怪物后机关门会打开。\n每打死一个怪物就可以进行\n加点，同时地图上所有怪物\n攻防都会发生变化。",
+					L"当你杀死一个点数为X的怪\n物后，你可以选择加X点攻\n击或X点防御或150X点生命\n值，同时地图上所有怪物攻\n防上升X/3（向下取整）。",
+					L"得分计算公式：\n分数=150*(攻击+防御)+生命\n\n成绩将上传到服务器和大家\n进行比较，P键可查看当前\nMAX。",
+					L"S/L: 存/读档\nR: 重新开始\nX: 使用道具\nP: 查看当前MAX\nM: 音乐开关",
+					L"本塔由Sky_天空的梦使用C++\n编写而成，代码开源在：\nhttps://github.com/ckcz123/mota2/\n\n如有问题，请于发布帖下进\n行回复和反馈，谢谢支持！"
+				};
+
 			}
-			if (special==208) {
-				hero.specialMove();
-				return false;
-			}
-			if (special==202) return false;
-			if (special==203&&f==0) return false;
-			if (special==204&&f==2) return false;
-			if (special==205&&f==1) return false;
-			if (special==206&&f==3) return false;
+
+			return false;
+
 		}
 		return true;
 	}
@@ -110,169 +145,41 @@ bool c_map_point::canMove(int f)
 bool c_map_point::openSpecial()
 {
 	if (door.getType()!=8) return false;
-	door.setOpened();
+	door.setOpen();
 	consts.opening=true;
 	consts.map_openingdoor=&door;
 	if (consts.music)
 		consts.hge->Effect_PlayEx(consts.he_OpenDoor, consts.volume);
 	return true;
 }
-void c_map_point::changeLight()
-{
-	if (special!=201&&special!=202) return;
-	special=403-special;
-}
-int c_map_point::getItemID()
-{
-	int c=0;
-	if (item==consts.s_lightning)c=10;
-	if (item==consts.s_redjewel)c=11;
-	if (item==consts.s_bluejewel)c=12;
-	if (item==consts.s_enemyinfo)c=13;
-	if (item==consts.s_allkey)c=14;
-	if (item==consts.s_yellowkey)c=15;
-	if (item==consts.s_bluekey)c=16;
-	if (item==consts.s_redkey)c=17;
-	if (item==consts.s_redpotion)c=18;
-	if (item==consts.s_bluepotion)c=19;
-	if (item==consts.s_sword1)c=20;
-	if (item==consts.s_shield1)c=21;
-	if (item==consts.s_coin)c=22;
-	if (item==consts.s_fly)c=23;
-	if (item==consts.s_cross)c=24;
-	if (item==consts.s_sword2)c=25;
-	if (item==consts.s_shield2)c=26;
-	if (item==consts.s_floor)c=27;
-	if (item==consts.s_stick)c=28;
-	if (item==consts.s_fly2)c=29;
-	if (item==consts.s_drink)c=30;
-	if (item==consts.s_sword3)c=31;
-	if (item==consts.s_shield3)c=32;
-	if (item==consts.s_atk)c=33;
-	if (item==consts.s_def)c=34;
-	if (item==consts.s_life)c=35;
-	return c;
-}
 void c_map_point::save(FILE* f)
 {
-	int g=0;
-	if (type==consts.s_ground)g=0;
-	if (type==consts.s_wall)g=1;
-	if (type==consts.s_water)g=2;
-	if (type==consts.s_sky)g=3;
-	if (type==consts.s_barrier)g=4;
-	int doortype=door.getType();
-	if (doortype==8&&door.isOpened()) doortype=9;
-	fprintf_s(f, "%d %d %d %d %d %d %d\n", g, getItemID(), monster.getId(), doortype, npc.getId(), npc.getVisit(), special);
+	fprintf_s(f, "%d %d %d %d %d\n", type, item, monster.getId(), door.getType(), npc.getId());
 }
 void c_map_point::load(FILE* f)
 {
-	int g, i, m, d, n, t;
-	fscanf_s(f, "%d %d %d %d %d %d %d\n", &g, &i, &m, &d, &n, &t, &special);
-	if (g==0)type=consts.s_ground;
-	if (g==1)type=consts.s_wall;
-	if (g==2)type=consts.s_water;
-	if (g==3)type=consts.s_sky;
-	if (g==4)type=consts.s_barrier;
-	item=NULL;
-	switch (i)
-	{
-	case 10:item=consts.s_lightning; break;
-	case 11:item=consts.s_redjewel; break;
-	case 12:item=consts.s_bluejewel; break;
-	case 13:item=consts.s_enemyinfo; break;
-	case 14:item=consts.s_allkey; break;
-	case 15:item=consts.s_yellowkey; break;
-	case 16:item=consts.s_bluekey; break;
-	case 17:item=consts.s_redkey; break;
-	case 18:item=consts.s_redpotion; break;
-	case 19:item=consts.s_bluepotion; break;
-	case 20:item=consts.s_sword1; break;
-	case 21:item=consts.s_shield1; break;
-	case 22:item=consts.s_coin; break;
-	case 23:item=consts.s_fly; break;
-	case 24:item=consts.s_cross; break;
-	case 25:item=consts.s_sword2; break;
-	case 26:item=consts.s_shield2; break;
-	case 27:item=consts.s_floor; break;
-	case 28:item=consts.s_stick; break;
-	case 29:item=consts.s_fly2; break;
-	case 30:item=consts.s_drink; break;
-	case 31:item=consts.s_sword3; break;
-	case 32:item=consts.s_shield3; break;
-	case 33:item=consts.s_atk; break;
-	case 34:item=consts.s_def; break;
-	case 35:item=consts.s_life; break;
-	}
+	int m, d, n;
+	fscanf_s(f, "%d %d %d %d %d\n", &type, &item, &m, &d, &n);
 	monster.init(m);
 	door.init(d);
 	npc.init(n);
-	npc.setVisit(t);
 }
-void c_map_floor::init(int d, int ch[30][30])
+void c_map_floor::init() {
+	init(map);
+}
+void c_map_floor::init(const int ch[30][30])
 {
-	id=d;
-	ux=-100; uy=-100; dx=-100; dy=-100;
 	for (int i=0; i<consts.map_height; i++)
 	{
 		for (int j=0; j<consts.map_width; j++)
 		{
-			if (ch[i][j]==0)info[i][j].init(consts.s_ground, NULL, 0, 0);
-			if (ch[i][j]==1)info[i][j].init(consts.s_wall, NULL, 0, 0);
-			if (ch[i][j]==2)info[i][j].init(consts.s_water, NULL, 0, 0);
-			if (ch[i][j]==3)info[i][j].init(consts.s_sky, NULL, 0, 0);
-			if (ch[i][j]==4)info[i][j].init(consts.s_barrier, NULL, 0, 0);
-			if (ch[i][j]==10)info[i][j].init(NULL, consts.s_lightning, 0, 0);
-			if (ch[i][j]==11)info[i][j].init(NULL, consts.s_redjewel, 0, 0);
-			if (ch[i][j]==12)info[i][j].init(NULL, consts.s_bluejewel, 0, 0);
-			if (ch[i][j]==13)info[i][j].init(NULL, consts.s_enemyinfo, 0, 0);
-			if (ch[i][j]==14)info[i][j].init(NULL, consts.s_allkey, 0, 0);
-			if (ch[i][j]==15)info[i][j].init(NULL, consts.s_yellowkey, 0, 0);
-			if (ch[i][j]==16)info[i][j].init(NULL, consts.s_bluekey, 0, 0);
-			if (ch[i][j]==17)info[i][j].init(NULL, consts.s_redkey, 0, 0);
-			if (ch[i][j]==18)info[i][j].init(NULL, consts.s_redpotion, 0, 0);
-			if (ch[i][j]==19)info[i][j].init(NULL, consts.s_bluepotion, 0, 0);
-			if (ch[i][j]==20)info[i][j].init(NULL, consts.s_sword1, 0, 0);
-			if (ch[i][j]==21)info[i][j].init(NULL, consts.s_shield1, 0, 0);
-			if (ch[i][j]==22)info[i][j].init(NULL, consts.s_coin, 0, 0);
-			if (ch[i][j]==23)info[i][j].init(NULL, consts.s_fly, 0, 0);
-			if (ch[i][j]==24)info[i][j].init(NULL, consts.s_cross, 0, 0);
-			if (ch[i][j]==25)info[i][j].init(NULL, consts.s_sword2, 0, 0);
-			if (ch[i][j]==26)info[i][j].init(NULL, consts.s_shield2, 0, 0);
-			if (ch[i][j]==27)info[i][j].init(NULL, consts.s_floor, 0, 0);
-			if (ch[i][j]==28)info[i][j].init(NULL, consts.s_stick, 0, 0);
-			if (ch[i][j]==29)info[i][j].init(NULL, consts.s_fly2, 0, 0);
-			if (ch[i][j]==30)info[i][j].init(NULL, consts.s_drink, 0, 0);
-			if (ch[i][j]==31)info[i][j].init(NULL, consts.s_sword3, 0, 0);
-			if (ch[i][j]==32)info[i][j].init(NULL, consts.s_shield3, 0, 0);
-			if (ch[i][j]==33)info[i][j].init(NULL, consts.s_atk, 0, 0);
-			if (ch[i][j]==34)info[i][j].init(NULL, consts.s_def, 0, 0);
-			if (ch[i][j]==35)info[i][j].init(NULL, consts.s_life, 0, 0);
-			if (ch[i][j]==81)info[i][j].init(NULL, NULL, 0, 6);
-			if (ch[i][j]==83)info[i][j].init(NULL, NULL, 0, 7);
-			if (ch[i][j]==91)info[i][j].init(NULL, NULL, 0, 1);
-			if (ch[i][j]==92)info[i][j].init(NULL, NULL, 0, 2);
-			if (ch[i][j]==93)info[i][j].init(NULL, NULL, 0, 3);
-			if (ch[i][j]==96)info[i][j].init(NULL, NULL, 0, 8);
-			if (ch[i][j]==97)info[i][j].init(NULL, NULL, 0, 9);
-			if (ch[i][j]>=40&&ch[i][j]<=80)
-				info[i][j].init(NULL, NULL, 0, ch[i][j]);
-			if (ch[i][j]==94)
-			{
-				info[i][j].init(NULL, NULL, 0, 4);
-				ux=j;
-				uy=i;
-			}
-			if (ch[i][j]==95)
-			{
-				info[i][j].init(NULL, NULL, 0, 5);
-				dx=j;
-				dy=i;
-			}
-			if (ch[i][j]>=101&&ch[i][j]<=200)info[i][j].init(NULL, NULL, ch[i][j]-100, 0);
-			if (ch[i][j]>=201&&ch[i][j]<=300) {
-				info[i][j].init(NULL, NULL, 0, 0, ch[i][j]);
-			}
+			if (ch[i][j] == 10)info[i][j].init(10, 0, 0, 0, 0);
+			if (ch[i][j] == 11)info[i][j].init(11, 0, 0, 0, 0);
+			if (ch[i][j] == 24)info[i][j].init(10, 0, 0, 24, 0);
+			if (ch[i][j] == 31)info[i][j].init(10, 31, 0, 0, 0);
+			if (ch[i][j] == 41)info[i][j].init(10, 0, 0, 0, 41);
+			if (ch[i][j] >= 51 && ch[i][j] <= 99)
+				info[i][j].init(10, 0, ch[i][j], 0, 0);
 		}
 	}
 }
@@ -300,154 +207,16 @@ void c_map_floor::printMonsterInfo(int i, int j)
 }
 bool c_map_floor::canMove(int x, int y, int f)
 {
-	if (info[y][x].canMove(f)) {
-		int spe=info[y][x].getSpecial();
-		if (spe!=210&&spe!=211) return true;
-		int sx=x+hero.dir[0][f], sy=y+hero.dir[1][f];
-		if (!info[sy][sx].isGround()) return false;
-		if (info[sy][sx].getSpecial()==0||info[sy][sx].getSpecial()==209) return true;
-		return false;
-	}
-	return false;
+	return info[y][x].canMove(f);
 }
 int c_map_floor::getItem(int x, int y)
 {
-	int c=info[y][x].getItemID();
-	if (c!=10)
-		info[y][x].distroyItem();
+	int c=info[y][x].getItem();
+	if (c>0) info[y][x].distroy();
 	return c;
-}
-int c_map_floor::getSpecial(int x, int y)
-{
-	return info[y][x].getSpecial();
-}
-void c_map_floor::setSpecial(int x, int y, int _spe)
-{
-	info[y][x].setSpecial(_spe);
-}
-void c_map_floor::getDownPosition(int &x, int &y)
-{
-	x=dx;
-	y=dy;
-	if (hero.getNowFloor()==21)
-		y-=2;
-}
-void c_map_floor::getUpPosition(int &x, int &y)
-{
-	x=ux;
-	y=uy;
-}
-bool c_map_floor::checkChallenge()
-{
-	if (id<30||finished) return false;
-	if (id==31) {
-		for (int i=0; i<consts.map_width; i++) {
-			for (int j=0; j<consts.map_width; j++) {
-				if (info[i][j].getSpecial()==207)
-					return false;
-			}
-		}
-		return true;
-	}
-	if (id==32) {
-		for (int i=0; i<consts.map_width; i++) {
-			for (int j=0; j<consts.map_width; j++) {
-				if (info[i][j].getSpecial()==201)
-					return false;
-			}
-		}
-		return true;
-	}
-	if (id==33||id==34||id==35) {
-		for (int i=0; i<consts.map_width; i++) {
-			for (int j=0; j<consts.map_width; j++) {
-				if (info[i][j].getSpecial()==202)
-					return false;
-			}
-		}
-		return true;
-	}
-	if (id==37) {
-		int darkcnt=0;
-		for (int i=0; i<11; i++)
-			for (int j=0; j<11; j++)
-				if (info[i][j].getSpecial()==202)
-					darkcnt++;
-		if (darkcnt!=8) return false;
-		int res[8][2]={{4,2},{5,2},{5,3},{6,2},{7,2},{7,3},{4,8},{6,6}};
-		for (int i=0; i<8; i++)
-			if (info[res[i][0]][res[i][1]].getSpecial()!=202) return false;
-		return true;
-	}
-	if (id==40) {
-		for (int i=0; i<9; i++)
-			for (int j=0; j<9; j++)
-				if (info[i+2][j].getSpecial()!=map_floor[id-1].getinfo(i+2, 8-j)->getSpecial())
-					return false;
-		return true;
-	}
-	if (id==41) {
-		int darkcnt=0;
-		for (int i=0; i<11; i++)
-			for (int j=0; j<11; j++)
-				if (info[i][j].getSpecial()==202)
-					darkcnt++;
-		if (darkcnt!=3) return false;
-		if (info[4][2].getSpecial()!=202||info[6][4].getSpecial()!=202||info[6][6].getSpecial()!=202) return false;
-		return true;
-	}
-	if (id==42||id==43) {
-		for (int i=0; i<consts.map_width; i++) {
-			for (int j=0; j<consts.map_width; j++) {
-				if (info[i][j].getSpecial()==209||info[i][j].getSpecial()==210)
-					return false;
-			}
-		}
-		return true;
-	}
-	return false;
-}
-void c_map_floor::finishChallenge()
-{
-	finished=true;
-	if (ux>=1&&info[uy][ux-1].openSpecial()) return;
-	if (uy>=1&&info[uy-1][ux].openSpecial()) return;
-	if (ux<consts.map_width-1&&info[uy][ux+1].openSpecial()) return;
-	if (uy<consts.map_width-1&&info[uy+1][ux].openSpecial()) return;
-}
-void c_map_floor::changeLight(int x, int y)
-{
-	if (id==33) {
-		x-=6; y-=4;
-		if (x<0||x>2||y<0||y>2) return;
-		info[y+4][x+2].changeLight();
-		if (x>0) info[y+4][x+1].changeLight();
-		if (y>0) info[y+3][x+2].changeLight();
-		if (x<2) info[y+4][x+3].changeLight();
-		if (y<2) info[y+5][x+2].changeLight();
-	}
-	else if (id==34) {
-		x-=1; y-=4;
-		if (x<0||x>3||y<0||y>3) return;
-		info[y+4][x+6].changeLight();
-		if (x>0) info[y+4][x+5].changeLight();
-		if (y>0) info[y+3][x+6].changeLight();
-		if (x<3) info[y+4][x+7].changeLight();
-		if (y<3) info[y+5][x+6].changeLight();
-	}
-	else if (id==35) {
-		x-=6; y-=3;
-		if (x<0||x>4||y<0||y>4) return;
-		info[y+3][x].changeLight();
-		if (x>0) info[y+3][x-1].changeLight();
-		if (y>0) info[y+2][x].changeLight();
-		if (x<4) info[y+3][x+1].changeLight();
-		if (y<4) info[y+4][x].changeLight();
-	}
 }
 void c_map_floor::save(FILE* f)
 {
-	fprintf_s(f, "%d %d %d %d\n", dx, dy, ux, uy);
 	for (int i=0; i<consts.map_height; i++)
 	{
 		for (int j=0; j<consts.map_width; j++)
@@ -458,7 +227,6 @@ void c_map_floor::save(FILE* f)
 }
 void c_map_floor::load(FILE* f)
 {
-	fscanf_s(f, "%d %d %d %d\n", &dx, &dy, &ux, &uy);
 	for (int i=0; i<consts.map_height; i++)
 	{
 		for (int j=0; j<consts.map_width; j++)
@@ -466,5 +234,4 @@ void c_map_floor::load(FILE* f)
 			info[i][j].load(f);
 		}
 	}
-	finished=false;
 }

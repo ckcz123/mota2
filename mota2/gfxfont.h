@@ -4,13 +4,19 @@
 #include <atlbase.h>
 #include <cstdio>
 #pragma comment(linker,"/NODEFAULTLIB:libc.lib")
-
+/*
 __inline float _floor(float f)
 {
 	static int _n;
 	_asm fld f
 	_asm fistp _n
 	return (float)_n;
+}*/
+
+__inline float _floor(float f)
+{
+	int v = (int)f;
+	return (float)v;
 }
 
 class GfxFont
@@ -84,12 +90,18 @@ public:
 
 public:
 	// äÖÈ¾ÎÄ±¾
-	virtual void    Print(float x, float y, const char *format, ...)
+	virtual void    Print(float x, float y, const wchar_t *format, ...)
 	{
-		char sBuffer[10240]={0};
-		char *lpsArg=(char*)&format+sizeof(format);
-		vsprintf_s(sBuffer, 10240, format, lpsArg);
-		Render(x, y, CA2W(sBuffer));
+		//char sBuffer[10240]={0};
+		//char *lpsArg=(char*)&format+sizeof(format);
+		//vsprintf_s(sBuffer, 10240, format, lpsArg);
+		//Render(x, y, CA2W(sBuffer));
+
+		wchar_t sBuffer[10240] = { 0 };
+		wchar_t *lpsArg = (wchar_t *)&format + sizeof(format);
+		wprintf(sBuffer, format, lpsArg);
+		Render(x, y, sBuffer);
+
 	}
 	virtual void    Render(float x, float y, const wchar_t* text)
 	{

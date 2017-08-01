@@ -14,15 +14,13 @@ public:
 	void changeState();//¹ÖÎï¶¯»­
 	int getId() { return id; }
 	int getHp() { return hp; }
-	bool beAttacked(int hero_atk) { hp-=special==2?1:hero_atk-def; return hp<=0; }
-	int getAtk() { return atk; }
-	int getDef() { return def; }
+	int getAtk();
+	int getDef();
 	int getMoney() { return money; }
-	int getExperience() { return experience; }
 	int getSpecial() { return special; }
 private:
-	char name[30];
-	int id, hp, atk, def, money, experience, special;
+	wchar_t name[30];
+	int id, hp, atk, def, money, special;
 	int state, position;
 	hgeSprite *monster[4];
 };

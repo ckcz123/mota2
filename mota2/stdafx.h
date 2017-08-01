@@ -13,6 +13,7 @@
 #include <ctime>
 #include <string>
 #include <vector>
+#include <io.h>
 #include "constants.h"
 using namespace std;
 
