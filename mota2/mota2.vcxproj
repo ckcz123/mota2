@@ -138,6 +138,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>legacy_stdio_definitions.lib;hge.lib;hgehelp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>libc.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalOptions>/SAFESEH:NO %(AdditionalOptions)</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -162,6 +163,7 @@
     <ClInclude Include="constants.h" />
     <ClInclude Include="gfxfont.h" />
     <ClInclude Include="hero.h" />
+    <ClInclude Include="http.h" />
     <ClInclude Include="map.h" />
     <ClInclude Include="monster.h" />
     <ClInclude Include="npc.h" />
@@ -171,6 +173,7 @@
   <ItemGroup>
     <ClCompile Include="constants.cpp" />
     <ClCompile Include="hero.cpp" />
+    <ClCompile Include="http.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="monster.cpp" />

@@ -55,7 +55,9 @@ bool c_hero::moveComplete()
 			consts.hge->Effect_PlayEx(consts.he_GetItem, consts.volume);
 		switch (item)
 		{
-		case 31: consts.setMsg(L"获得神秘六芒星！\n你可以支付任意点攻击或防御值，使\n全场怪兽攻防下降支付点数的一半。\n\n[X]键使用。"); break;
+		case 31: 
+			consts.item_time=0;
+			consts.setMsg(L"获得神秘六芒星！\n你可以支付任意点攻击或防御值，使\n全场怪兽攻防下降支付点数的一半。\n\n[X]键使用。"); break;
 		default: break;
 		}
 		consts.step++;
@@ -66,15 +68,18 @@ bool c_hero::moveComplete()
 }
 void c_hero::printInfo()
 {
-	int py=16;
-	consts.s_heart->Render(16, py);
-	consts.hgef->printf(60, py, HGETEXT_LEFT, "%d", hp);
-	py+=32;
-	consts.s_sword1->Render(16, py);
-	consts.hgef->printf(60, py, HGETEXT_LEFT, "%d", atk);
-	py+=32;
-	consts.s_shield1->Render(16, py);
-	consts.hgef->printf(60, py, HGETEXT_LEFT, "%d", def);
+	int py=48;
+	consts.s_heart->Render(24, py);
+	consts.hgef->printf(68, py, HGETEXT_LEFT, "%d", hp);
+	py+=42;
+	consts.s_sword1->Render(24, py);
+	consts.hgef->printf(68, py, HGETEXT_LEFT, "%d", atk);
+	py+=42;
+	consts.s_shield1->Render(24, py);
+	consts.hgef->printf(68, py, HGETEXT_LEFT, "%d", def);
+	py+=42;
+	consts.s_score->Render(24, py);
+	consts.hgef->printf(68, py, HGETEXT_LEFT, "%d", getScore());
 }
 bool c_hero::canBeat(c_monster monster) // 判断能否打败
 {
@@ -87,6 +92,10 @@ int c_hero::getDamage(c_monster monster) // 打败怪物，返回hp
 	int hero_def = monster.getSpecial() == 1 ? 0 : def;
 	if (hero_def >= mon_atk) return 0;
 	return (monster.getHp() - 1) / (atk - mon_def) * (mon_atk - hero_def);
+}
+void c_hero::beat(c_monster monster)
+{
+	hp-=getDamage(monster);
 }
 void c_hero::save(FILE* f)
 {

@@ -9,6 +9,9 @@ c_hero hero;
 // 常量信息
 constants consts;
 
+// HTTP
+Http http;
+
 // encode & decode file
 bool fileConvert(char* from, char* to, bool encode=true) {
 	char* pwd = "g-=f3j0o+";
@@ -133,10 +136,21 @@ void showMessage(const wchar_t *s) // 显示提示
 {
 	hgeSprite *s_temp;
 	s_temp=new hgeSprite(consts.ht_skin, 0, 0, 128, 128);
-	s_temp->SetColor(0x88FFFFFF);
+	s_temp->SetColor(0xBBFFFFFF);
 	s_temp->RenderStretch(16+consts.ScreenLeft, consts.map_height*32-160, consts.map_width*32+consts.ScreenLeft-16, consts.map_height*32-8);
-	GfxFont *f=new GfxFont(L"楷体", 23);
+	GfxFont *f=new GfxFont(L"楷体", 22);
 	f->Print(16+consts.ScreenLeft+8, consts.map_height*32-160+8, L"%s", s);
+	delete f;
+	delete s_temp;
+}
+void showMax(const wchar_t *s)
+{
+	hgeSprite *s_temp;
+	s_temp=new hgeSprite(consts.ht_skin, 0, 0, 128, 128);
+	s_temp->SetColor(0xBBFFFFFF);
+	s_temp->RenderStretch(16+consts.ScreenLeft, consts.map_height*32-400, consts.map_width*32+consts.ScreenLeft-16, consts.map_height*32-8);
+	GfxFont *f=new GfxFont(L"楷体", 22);
+	f->Print(16+consts.ScreenLeft+8, consts.map_height*32-400+8, L"%s", s);
 	delete f;
 	delete s_temp;
 }
@@ -167,11 +181,18 @@ bool frameFunc()
 		loadsave();
 		consts.msg=consts.MESSAGE_LOAD;
 	}
+	if (consts.isFree()&&consts.hge->Input_GetKeyState(HGEK_P)) consts.getRank();
 	if (consts.isFree()&&consts.hge->Input_GetKeyState(HGEK_M)) {
 		consts.music=!consts.music;
 		consts.setMsg(consts.music?L"音乐已开启":L"音乐已关闭");
 		if (consts.music) consts.hge->Channel_SetVolume(consts.hc_Music, consts.bgmvolume);
 		else consts.hge->Channel_SetVolume(consts.hc_Music, 0);
+	}
+	if (consts.isFree()&&consts.hge->Input_GetKeyState(HGEK_X)&&consts.item_time>=0)
+	{
+		consts.item_choose=0;
+		consts.item_point=0;
+		consts.msg=consts.MESSAGE_ITEM;
 	}
 
 	// 提示消息
@@ -188,6 +209,71 @@ bool frameFunc()
 				consts.map_npc = NULL;
 			}
 
+		}
+	}
+
+	// 加点过程
+	if (consts.msg==consts.MESSAGE_POINT)
+	{
+		if (consts.hge->Input_GetKeyState(HGEK_1)) {
+			hero.addHP(consts.curr_point);
+			consts.curr_point=0;
+			consts.msg=consts.MESSAGE_NONE;
+		}
+		else if (consts.hge->Input_GetKeyState(HGEK_2)) {
+			hero.addAtk(consts.curr_point);
+			consts.curr_point=0;
+			consts.msg=consts.MESSAGE_NONE;
+		}
+		else if (consts.hge->Input_GetKeyState(HGEK_3)) {
+			hero.addDef(consts.curr_point);
+			consts.curr_point=0;
+			consts.msg=consts.MESSAGE_NONE;
+		}
+	}
+
+	// 使用道具
+	if (consts.msg==consts.MESSAGE_ITEM)
+	{
+		if (consts.hge->Input_GetKeyState(HGEK_ESCAPE)) consts.msg=consts.MESSAGE_NONE;
+		else if (consts.item_choose==0) {
+			if (consts.hge->Input_GetKeyState(HGEK_1)) consts.item_choose=1;
+			else if (consts.hge->Input_GetKeyState(HGEK_2)) consts.item_choose=2;
+		}
+		else {
+			if (consts.hge->Input_GetKeyState(HGEK_LEFT)&&clock()-consts.lasttime>100) {
+				consts.item_point-=10;
+				if (consts.item_point<0) consts.item_point=0;
+				consts.lasttime=clock();
+			}
+			else if (consts.hge->Input_GetKeyState(HGEK_DOWN)&&clock()-consts.lasttime>100) {
+				consts.item_point--;
+				if (consts.item_point<0) consts.item_point=0;
+				consts.lasttime=clock();
+			}
+			else if (consts.hge->Input_GetKeyState(HGEK_UP)&&clock()-consts.lasttime>100) {
+				consts.item_point++;
+				if (consts.item_choose==1&&consts.item_point>hero.getAtk()) consts.item_point=hero.getAtk();
+				if (consts.item_choose==2&&consts.item_point>hero.getDef()) consts.item_point=hero.getDef();
+				consts.lasttime=clock();
+			}
+			else if (consts.hge->Input_GetKeyState(HGEK_RIGHT)&&clock()-consts.lasttime>100) {
+				consts.item_point+=10;
+				if (consts.item_choose==1&&consts.item_point>hero.getAtk()) consts.item_point=hero.getAtk();
+				if (consts.item_choose==2&&consts.item_point>hero.getDef()) consts.item_point=hero.getDef();
+				consts.lasttime=clock();
+			}
+			else if (consts.hge->Input_GetKeyState(HGEK_ENTER)) {
+				if (consts.item_choose==1) hero.addAtk(-consts.item_point);
+				if (consts.item_choose==2) hero.addDef(-consts.item_point);
+				consts.total_point-=consts.item_point/2;
+				consts.item_time++;
+				wchar_t ss[200];
+				wsprintf(ss, L"支付%d点%s成功！\n\n全场怪兽攻防下降%d点。", consts.item_point, 
+					consts.item_choose==1?L"攻击力":L"防御力", consts.item_point/2);
+				consts.setMsg(ss);
+				consts.item_point=consts.item_choose=0;
+			}
 		}
 	}
 
@@ -233,11 +319,17 @@ bool frameFunc()
 	}
 
 	// 胜利or失败
-	if (consts.msg==consts.MESSAGE_WIN&&consts.hge->Input_GetKeyState(HGEK_ENTER)) return true;
+	if (consts.msg==consts.MESSAGE_WIN&&consts.hge->Input_GetKeyState(HGEK_ENTER)) {
+		init();
+		consts.msg=consts.MESSAGE_NONE;
+	}
 
 	// 重新开始
 	if (consts.msg==consts.MESSAGE_RESTART && consts.hge->Input_GetKeyState(HGEK_SPACE)) init(true);
-	if (consts.msg==consts.MESSAGE_RESTART &&consts.hge->Input_GetKeyState(HGEK_ENTER)) consts.msg=consts.MESSAGE_NONE;
+
+
+	if ((consts.msg==consts.MESSAGE_RESTART || consts.msg==consts.MESSAGE_RANK)
+		&& consts.hge->Input_GetKeyState(HGEK_ENTER)) consts.msg=consts.MESSAGE_NONE;
 
 	consts.goOn(&hero, &map_floor[0], dt);
 	return false;
@@ -262,12 +354,24 @@ bool renderFunc()
 		showMessage(L"你想重新开始吗？\n\n[ENTER] 继续游戏\n[SPACE] 重新开始");
 		break;;
 	case consts.MESSAGE_WIN:
-		
+	{
 		/* win */
+		wchar_t ss[200];
 
+		// uploading..
+		if (consts.max==0) {
+			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n正在上传成绩...\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
+		}
+		else if (consts.max==-1) {
+			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n成绩上传失败，请检查网络设置。\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
+		}
+		else {
+			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n当前排名%s，当前MAX %d。\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore(), consts.rank, consts.max);
+		}
 
-
+		showMessage(ss);
 		break;
+	}
 	case consts.MESSAGE_HINT:
 		showMessage(consts.hint.at(consts.nowcnt).c_str());
 		break;
@@ -296,14 +400,64 @@ bool renderFunc()
 		break;
 	}
 	case consts.MESSAGE_ITEM:
-
+	{
+		wchar_t ss[200];
+		if (consts.item_choose==0) {
+			wsprintf(ss, L"你已使用该道具%d次。\n\n请选择一项进行支付：\n[1] 攻击力\n[2] 防御力\n[ESC] 取消", consts.item_time);
+		}
+		else if (consts.item_choose==1 || consts.item_choose==2) {
+			wsprintf(ss, L"你要支付%s的点数为：%d\n\n[↑][↓][←][→] 更改数值\n[ENTER] 确认支付\n[ESC] 取消", 
+				consts.item_choose==1?L"攻击力":L"防御力", consts.item_point);
+		}
+		else break;
+		showMessage(ss);
 		break;
+	}
 	case consts.MESSAGE_POINT:
-
+	{
+		wchar_t ss[200];
+		wsprintf(ss, L"所有怪物攻防上升%d。\n\n请选择一项：\n[1] 生命值+%d\n[2] 攻击力+%d\n[3] 防御力+%d", consts.curr_point/3,
+			150*consts.curr_point, consts.curr_point, consts.curr_point);
+		showMessage(ss);
 		break;
+	}
 	case consts.MESSAGE_RANK:
+	{
+		
+		wchar_t ss[1200];
+		if (consts.max<0) {
+			wsprintf(ss, L"拉取MAX记录失败，请检查网络连接，\n或在贴吧下进行反馈。\n\n[ENTER] 确定");
+			showMessage(ss);
+		}
+		else if (consts.max==0) {
+			wsprintf(ss, L"正在拉取MAX记录，请稍后...\n\n[ENTER] 取消");
+			showMessage(ss);
+		}
+		else {
+			wcscpy_s(ss, L"当前MAX记录：\n\n");
 
+			for (int i=0; i<10; i++) {
+				wchar_t tmp[100];
+				wsprintf(tmp, L"TOP%2d: %-8d", i+1, consts.rd[i].score);
+				wcscat_s(ss, tmp);
+				if (consts.rd[i].score>0) {
+					wsprintf(tmp, L"  (%s %s)", consts.rd[i].t1, consts.rd[i].t2);
+					wcscat_s(ss, tmp);
+				}
+				if (i<=2) {
+					wsprintf(tmp, L"\n[%d, %d, %d, %d]",
+						consts.rd[i].hp, consts.rd[i].atk, consts.rd[i].def, consts.rd[i].item);
+					wcscat_s(ss, tmp);
+				}
+				wcscat_s(ss, L"\n");
+			}
+
+			wcscat_s(ss, L"\n[ENTER] 确定");
+			showMax(ss);
+		}
+		
 		break;
+	}
 	default:
 		break;
 	}
@@ -319,7 +473,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	consts.hge->System_SetState(HGE_FRAMEFUNC, frameFunc);
 	consts.hge->System_SetState(HGE_RENDERFUNC, renderFunc);
 	consts.hge->System_SetState(HGE_USESOUND, true);
-	consts.hge->System_SetState(HGE_TITLE, "可变加点单层 - By Sky_天空的梦");
+	consts.hge->System_SetState(HGE_TITLE, "可变加点单层 By Sky_天空的梦");
 	consts.hge->System_SetState(HGE_WINDOWED, true);
 	consts.hge->System_SetState(HGE_HIDEMOUSE, false);
 	consts.hge->System_SetState(HGE_SCREENHEIGHT, 32*consts.map_height);

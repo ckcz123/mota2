@@ -1,5 +1,8 @@
 #include "stdafx.h"
 
+extern Http http;
+extern c_hero hero;
+
 constants::constants()
 {
 	hge=NULL;
@@ -12,7 +15,8 @@ constants::constants()
 
 void constants::init()
 {
-	book=moving=item=false;
+	book=moving=false;
+	item_time=-1;
 	playtime=0.0;
 	step=0;
 	time_move=time_open=time_animation=time_battle=time_floor=0;
@@ -20,6 +24,7 @@ void constants::init()
 	curr_point = total_point = 0;
 	isMyTurn=true;
 	beatStarted=false;
+	max=0;
 	for (int i=0; i<100; i++) sd[i].hp=0;
 }
 void constants::loadResources()
@@ -52,6 +57,7 @@ void constants::loadResources()
 	s_enemyinfo=new hgeSprite(ht_icon, 32, 64, 32, 32);
 	s_sword1=new hgeSprite(ht_icon, 0, 32, 32, 32);
 	s_shield1=new hgeSprite(ht_icon, 32, 32, 32, 32);
+	s_score=new hgeSprite(ht_icon, 64, 128, 32, 32);
 	hc_Music=hge->Effect_PlayEx(he_Music, bgmvolume, 0, 1, true);
 }
 
@@ -104,6 +110,18 @@ void constants::goOn(c_hero* hero, c_map_floor* currFloor, float dt)
 				moving=false;
 		}
 	}
+	if (opening)
+	{
+		time_open+=dt;
+		if (time_open>=0.03f)
+		{
+			time_open-=0.03f;
+			if (map_openingdoor->open()) {
+				hge->Effect_PlayEx(he_OpenDoor);
+				opening=false;
+			}
+		}
+	}
 	
 	time_animation+=dt;
 	if (time_animation>=0.1f) // 四次后又回到自身状态
@@ -115,26 +133,103 @@ void constants::goOn(c_hero* hero, c_map_floor* currFloor, float dt)
 
 void constants::printInfo()
 {
-	s_step->Render(ScreenLeft+map_width*32+16, 308);
-	hgef->printf(ScreenLeft+map_width*32+60, 310, HGETEXT_LEFT, "%d", step);
+	s_step->Render(ScreenLeft+map_width*32+24, 340);
+	hgef->printf(ScreenLeft+map_width*32+68, 340, HGETEXT_LEFT, "%d", step);
 	int ptm=playtime;
-	s_time->Render(ScreenLeft+map_width*32+16, 264);
+	s_time->Render(ScreenLeft+map_width*32+24, 298);
 	if (ptm>=3600)
-		hgef->printf(ScreenLeft+map_width*32+60, 268, HGETEXT_LEFT, "%02d : %02d : %02d", ptm/3600, (ptm/60)%60, ptm%60);
-	else hgef->printf(ScreenLeft+map_width*32+60, 268, HGETEXT_LEFT, "%02d : %02d", ptm/60, ptm%60);
+		hgef->printf(ScreenLeft+map_width*32+68, 298, HGETEXT_LEFT, "%02d : %02d : %02d", ptm/3600, (ptm/60)%60, ptm%60);
+	else hgef->printf(ScreenLeft+map_width*32+68, 298, HGETEXT_LEFT, "%02d : %02d", ptm/60, ptm%60);
+
+	// print book & item
+	if (book)
+		s_enemyinfo->Render(24, 288);
+
+	if (item_time>=0) {
+		s_floor->Render(80, 288);
+		GfxFont *f=new GfxFont(L"楷体", 14, true);
+		f->Print(108, 308, L"%d", item_time);
+		delete f;
+	}
+
+}
+
+void constants::upload()
+{
+	thread t1(&constants::doUpload, this);
+	t1.detach();
+}
+
+void constants::doUpload()
+{
+	char url[200];
+	int time=item_time; if (time<0) time=0;
+	sprintf_s(url, "/upload?score=%d&hp=%d&atk=%d&def=%d&times=%d", hero.getScore(), hero.getHP(), hero.getAtk(),
+		hero.getDef(), time);
+
+	char* output=http.get(http.server, http.port, url, NULL);
+	if (output!=NULL) {
+
+		string text(output);
+		stringstream stream;
+		stream << text;
+
+		string s1;
+		stream >> s1 >> max;
+		if (max<=0) max=-1;
+		else {
+			size_t outsize;
+			mbstowcs_s(&outsize, rank, 20, s1.c_str(), 20);
+		}
+		delete output;
+	}
+	else
+		max=-1;
+}
+
+void constants::getRank()
+{
+	msg=MESSAGE_RANK;
+	max=0;
+	for (int i=0; i<10; i++)
+		rd[i].init();
+	thread t2(&constants::doGetRank, this);
+	t2.detach();
+}
+
+void constants::doGetRank()
+{
+	char* output=http.get(http.server, http.port, "/top", NULL);
+	if (output!=NULL) {
+		string text(output);
+		stringstream stream;
+		stream << text;
+		stream >> max;
+		for (int i=0; i<max; i++) {
+			stream >> rd[i].score >> rd[i].hp >> rd[i].atk >> rd[i].def >> rd[i].item;
+			string s1, s2;
+			stream >> s1 >> s2;
+			size_t outsize;
+			mbstowcs_s(&outsize, rd[i].t1, 20, s1.c_str(), 20);
+			mbstowcs_s(&outsize, rd[i].t2, 20, s2.c_str(), 20);
+		}
+		delete output;
+		if (max==0) max=1;
+	}
+	else
+		max=-1;
 }
 
 void constants::save(FILE* f)
 {
-	fprintf_s(f, "%d %d %d %d %d %d %.2f\n", map_width, map_height, total_point, book?1:0, item?1:0, step, playtime);
+	fprintf_s(f, "%d %d %d %d %d %d %.2f\n", map_width, map_height, total_point, book?1:0, item_time, step, playtime);
 }
 
 void constants::load(FILE* f)
 {
-	int _book, _item;
-	fscanf_s(f, "%d %d %d %d %d %d %f", &map_width, &map_height, &total_point, &_book, &_item, &step, &playtime);
+	int _book;
+	fscanf_s(f, "%d %d %d %d %d %d %f", &map_width, &map_height, &total_point, &_book, &item_time, &step, &playtime);
 	book=_book==1;
-	item=_item==1;
 	moving=false;
 }
 
@@ -143,7 +238,7 @@ void constants::load(constants* another) {
 	map_height = another->map_height;
 	total_point = another->total_point;
 	book = another->book;
-	item = another->item;
+	item_time= another->item_time;
 	step = another->step;
 	playtime = another->playtime;
 }

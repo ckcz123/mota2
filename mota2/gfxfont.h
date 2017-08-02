@@ -243,7 +243,7 @@ private:
 	inline float    GetWidthFromCharacter(wchar_t c, bool original=false)
 	{
 		unsigned int idx=GetGlyphByCharacter(c);
-		if (original && idx>0&&idx<font_count) return m_Glyphs[idx].c;
+		// if (original && idx>0&&idx<font_count) return m_Glyphs[idx].c;
 		return    (idx>=0x2000)?m_nFontSize:_floor(m_nFontSize/2);
 	}
 	inline void        CacheCharacter(unsigned int idx, wchar_t c)

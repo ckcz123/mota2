@@ -63,18 +63,16 @@ void c_monster::show(GfxFont* f, int i, int j)
 			int damage=hero.getDamage(*this);
 			int hp=hero.getHP();
 			if (damage>=hp)
-				f->SetColor(4294901760ul);
-			else if (damage<=hp/16)
-				f->SetColor(4278255360ul);
-			else if (damage<=hp/8)
-				f->SetColor(4290047668ul);
-			else if (damage<=hp/4)
-				f->SetColor(4291677440ul);
+				f->SetColor(0xFFFF0000);
+			else if (damage<=hp/10)
+				f->SetColor(0xFF00FF00);
+			else if (damage<=hp/5)
+				f->SetColor(0xFF66CD00);
 			else if (damage<=hp/2)
-				f->SetColor(4293844098ul);
-			else if (damage<=hp*2/3)
-				f->SetColor(4294951361ul);
-			else f->SetColor(4294942842ul);
+				f->SetColor(0xFF96CDCD);
+			else if (damage<=hp*3/4)
+				f->SetColor(0xFFEE7942);
+			else f->SetColor(0xFFEE3B3B);
 			if (damage>=c_hero::MAX_DAMAGE)
 				f->Print(j*32+consts.ScreenLeft, i*32+20, L"???");
 			else if (damage<100000)
@@ -100,33 +98,33 @@ void c_monster::printInfo()
 {
 	if (id!=0)
 	{
-		int py=16;
+		int py=32;
 		GfxFont *f=new GfxFont(L"¿¬Ìå", 24);
 		wchar_t s0[100]=L"";
 		if (special==1) wcscpy_s(s0, L"£¨Ä§¹¥£©");
 		else if (special==2) wcscpy_s(s0, L"£¨¼á¹Ì£©");
-		f->Print(consts.ScreenLeft+consts.map_width*32+16, py, L"%s%s", name, s0);
+		f->Print(consts.ScreenLeft+consts.map_width*32+24, py, L"%s%s", name, s0);
 		delete f;
 
-		py+=32;
-		consts.s_heart->Render(consts.ScreenLeft+consts.map_width*32+16, py);
-		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%d", hp);
-		py+=32;
-		consts.s_sword1->Render(consts.ScreenLeft+consts.map_width*32+16, py);
-		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%-6d(%d%+d)", getAtk(), atk, consts.total_point);
-		py+=32;
-		consts.s_shield1->Render(consts.ScreenLeft+consts.map_width*32+16, py);
-		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%-6d(%d%+d)", getDef(), def, consts.total_point);
-		py+=32;
-		consts.s_coin->Render(consts.ScreenLeft+consts.map_width*32+16, py);
-		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%d", money);
-		py+=32;
-		consts.s_damage->Render(consts.ScreenLeft+consts.map_width*32+16, py);
+		py+=36;
+		consts.s_heart->Render(consts.ScreenLeft+consts.map_width*32+24, py);
+		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+68, py, HGETEXT_LEFT, "%d", hp);
+		py+=36;
+		consts.s_sword1->Render(consts.ScreenLeft+consts.map_width*32+24, py);
+		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+68, py, HGETEXT_LEFT, "%-6d(%d%+d)", getAtk(), atk, consts.total_point);
+		py+=36;
+		consts.s_shield1->Render(consts.ScreenLeft+consts.map_width*32+24, py);
+		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+68, py, HGETEXT_LEFT, "%-6d(%d%+d)", getDef(), def, consts.total_point);
+		py+=36;
+		consts.s_coin->Render(consts.ScreenLeft+consts.map_width*32+24, py);
+		consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+68, py, HGETEXT_LEFT, "%d", money);
+		py+=36;
+		consts.s_damage->Render(consts.ScreenLeft+consts.map_width*32+24, py);
 		int damage=hero.getDamage(*this);
 		if (damage==c_hero::MAX_DAMAGE)
-			consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "???");
+			consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+68, py, HGETEXT_LEFT, "???");
 		else
-			consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+60, py, HGETEXT_LEFT, "%d", damage);
+			consts.hgef->printf(consts.ScreenLeft+consts.map_width*32+68, py, HGETEXT_LEFT, "%d", damage);
 	}
 }
 void c_monster::changeState()

@@ -9,6 +9,13 @@ struct savedata
 	void init(int _hp, int _atk, int _def) { hp=_hp; atk=_atk; def=_def; }
 };
 
+struct record
+{
+	int score, hp, atk, def, item;
+	wchar_t t1[20], t2[20];
+	void init() { score=hp=atk=def=item=0; wcscpy_s(t1, L""); wcscpy_s(t2, L""); }
+};
+
 class constants
 {
 public:
@@ -34,6 +41,10 @@ public:
 	void load(FILE*);
 	void load(constants* another);
 	void printInfo();
+	void upload();
+	void doUpload();
+	void getRank();
+	void doGetRank();
 
 	int msg;
 	vector<wstring> hint;
@@ -43,17 +54,23 @@ public:
 	float playtime;
 	int step;
 
-	bool book, item, moving, music, opening;
+	bool book, moving, music, opening;
 	int map_height, map_width, volume, bgmvolume, ScreenLeft;
 
 	// 使用道具
-	int item_choose, item_point;
+	int item_time, item_choose, item_point;
 
 	// 当前点数
 	int curr_point, total_point;
 
+	// 存/读档
 	savedata sd[100];
 	int wanttosave;
+
+	// 排名信息
+	wchar_t rank[20];
+	int max;
+	record rd[20];
 
 	// 正在开的门
 	c_map_door *map_openingdoor;
@@ -75,7 +92,7 @@ public:
 	hgeSprite *s_ground, *s_wall;
 	hgeSprite *s_coin, *s_floor;
 	hgeSprite *s_sword1, *s_shield1;
-	hgeSprite *s_enemyinfo, *s_heart, *s_expr, *s_damage, *s_time, *s_step;
+	hgeSprite *s_enemyinfo, *s_heart, *s_expr, *s_damage, *s_time, *s_step, *s_score;
 	hgeSprite *s_specialdoor;
 
 	// 文字

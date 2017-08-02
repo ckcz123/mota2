@@ -3,6 +3,7 @@
 extern c_map_floor map_floor[50];
 extern c_hero hero;
 extern constants consts;
+extern Http http;
 
 /***** 地图数据 *****/
 const int map[30][30] = {
@@ -83,6 +84,8 @@ bool c_map_point::canMove(int f)
 			if (hero.canBeat(monster))
 			{
 
+				hero.beat(monster);
+
 				// beat here!
 				if (consts.music)
 					consts.hge->Effect_PlayEx(consts.he_Attack, consts.volume);
@@ -93,6 +96,9 @@ bool c_map_point::canMove(int f)
 				// 打死了boss
 				if (id == 99) {
 					consts.msg = consts.MESSAGE_WIN;
+					wcscpy_s(consts.rank, L"");
+					consts.max=0;
+					consts.upload();
 				}
 				else {
 					consts.curr_point = point;
@@ -187,7 +193,7 @@ void c_map_floor::init(const int ch[30][30])
 }
 void c_map_floor::show()
 {
-	GfxFont *f=new GfxFont(L"楷体", 12, true);
+	GfxFont *f=new GfxFont(L"楷体", 13, true);
 	for (int i=0; i<consts.map_height; i++)
 	{
 		for (int j=0; j<consts.map_width; j++)

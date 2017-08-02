@@ -16,6 +16,7 @@ public:
 	void printInfo();//输出勇士信息
 	bool canBeat(c_monster);//能否打败怪物
 	int getDamage(c_monster);//打败怪物普通伤害
+	void beat(c_monster);
 	void save(FILE*);//存档
 	void load(FILE*);//读档
 	void load(c_hero* another);
