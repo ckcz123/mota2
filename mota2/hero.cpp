@@ -11,9 +11,9 @@ c_hero::c_hero()
 };
 void c_hero::init()
 {
-	hp=100000;
-	atk=1000;
-	def=1000;
+	hp=1000;
+	atk=10;
+	def=10;
 	x=6;
 	y=12;
 	face=3;

@@ -99,7 +99,7 @@ void c_monster::printInfo()
 	if (id!=0)
 	{
 		int py=32;
-		GfxFont *f=new GfxFont(L"¿¬Ìå_gb2312", 24);
+		GfxFont *f=new GfxFont(L"¿¬Ìå", 24);
 		wchar_t s0[100]=L"";
 		if (special==1) wcscpy_s(s0, L"£¨Ä§¹¥£©");
 		else if (special==2) wcscpy_s(s0, L"£¨¼á¹Ì£©");

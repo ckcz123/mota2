@@ -193,7 +193,7 @@ void c_map_floor::init(const int ch[30][30])
 }
 void c_map_floor::show()
 {
-	GfxFont *f=new GfxFont(L"Ώ¬Με_gb2312", 13, true);
+	GfxFont *f=new GfxFont(L"Ώ¬Με", 13, true);
 	for (int i=0; i<consts.map_height; i++)
 	{
 		for (int j=0; j<consts.map_width; j++)

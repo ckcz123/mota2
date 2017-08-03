@@ -138,7 +138,7 @@ void showMessage(const wchar_t *s) // 显示提示
 	s_temp=new hgeSprite(consts.ht_skin, 0, 0, 128, 128);
 	s_temp->SetColor(0xBBFFFFFF);
 	s_temp->RenderStretch(16+consts.ScreenLeft, consts.map_height*32-160, consts.map_width*32+consts.ScreenLeft-16, consts.map_height*32-8);
-	GfxFont *f=new GfxFont(L"楷体_gb2312", 22);
+	GfxFont *f=new GfxFont(L"楷体", 22);
 	f->Print(16+consts.ScreenLeft+8, consts.map_height*32-160+8, L"%s", s);
 	delete f;
 	delete s_temp;
@@ -149,7 +149,7 @@ void showMax(const wchar_t *s)
 	s_temp=new hgeSprite(consts.ht_skin, 0, 0, 128, 128);
 	s_temp->SetColor(0xBBFFFFFF);
 	s_temp->RenderStretch(16+consts.ScreenLeft, consts.map_height*32-400, consts.map_width*32+consts.ScreenLeft-16, consts.map_height*32-8);
-	GfxFont *f=new GfxFont(L"楷体_gb2312", 22);
+	GfxFont *f=new GfxFont(L"楷体", 22);
 	f->Print(16+consts.ScreenLeft+8, consts.map_height*32-400+8, L"%s", s);
 	delete f;
 	delete s_temp;
@@ -325,7 +325,12 @@ bool frameFunc()
 	}
 
 	// 重新开始
-	if (consts.msg==consts.MESSAGE_RESTART && consts.hge->Input_GetKeyState(HGEK_SPACE)) init(true);
+	if (consts.msg==consts.MESSAGE_RESTART) {
+		if (consts.hge->Input_GetKeyState(HGEK_ENTER))
+			init(true);
+		else if (consts.hge->Input_GetKeyState(HGEK_ESCAPE))
+			consts.msg=consts.MESSAGE_NONE;
+	}
 
 
 	if ((consts.msg==consts.MESSAGE_RESTART || consts.msg==consts.MESSAGE_RANK)
@@ -351,7 +356,7 @@ bool renderFunc()
 	switch (consts.msg)
 	{
 	case consts.MESSAGE_RESTART:
-		showMessage(L"你想重新开始吗？\n\n[ENTER] 继续游戏\n[SPACE] 重新开始");
+		showMessage(L"你想重新开始吗？\n\n[ENTER] 重新开始\n[ESC] 返回游戏");
 		break;;
 	case consts.MESSAGE_WIN:
 	{
@@ -360,7 +365,7 @@ bool renderFunc()
 
 		// uploading..
 		if (consts.max==0) {
-			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n正在上传成绩...\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
+			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n正在上传成绩... 请稍后\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
 		}
 		else if (consts.max==-1) {
 			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n成绩上传失败，请检查网络设置。\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
@@ -430,7 +435,7 @@ bool renderFunc()
 			showMessage(ss);
 		}
 		else if (consts.max==0) {
-			wsprintf(ss, L"正在拉取MAX记录，请稍后...\n\n[ENTER] 取消");
+			wsprintf(ss, L"正在拉取MAX记录，请稍后...\n这可能需要几秒钟。\n\n[ENTER] 取消");
 			showMessage(ss);
 		}
 		else {

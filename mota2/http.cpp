@@ -107,11 +107,12 @@ char* Http::readUrl2(char *hostname, int port, char* path, char* parameters, lon
 	else
 		strcat_s(sendBuffer, "POST ");
 	strcat_s(sendBuffer, path);
-	strcat_s(sendBuffer, " HTTP/1.1\r\n");
+	strcat_s(sendBuffer, " HTTP/1.0\r\n");
 	strcat_s(sendBuffer, "Host: ");
 	strcat_s(sendBuffer, hostname);
 	strcat_s(sendBuffer, "\r\n");
 	strcat_s(sendBuffer, "Cache-Control: no-cache\r\n");
+	strcat_s(sendBuffer, "Connection: Close\r\n");
 	if (parameters!=NULL)
 	{
 		strcat_s(sendBuffer, "Content-Type: application/x-www-form-urlencoded\r\n");
@@ -129,14 +130,22 @@ char* Http::readUrl2(char *hostname, int port, char* path, char* parameters, lon
 
 	///////////// step 3 - get received bytes ////////////////
 	// Receive until the peer closes the connection
+	DWORD timeout = 10000;
+	setsockopt(conn, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+
 	totalBytesRead=0;
 	while (1)
 	{
 		memset(readBuffer, 0, bufSize);
 		thisReadSize=recv(conn, readBuffer, bufSize, 0);
 
-		if (thisReadSize<=0)
+		if (thisReadSize==0)
 			break;
+		if (thisReadSize<0)  {
+			if (tmpResult!=NULL) delete tmpResult;
+			closesocket(conn);
+			return NULL;
+		}
 
 		tmpResult=(char*)realloc(tmpResult, thisReadSize+totalBytesRead);
 
@@ -144,8 +153,10 @@ char* Http::readUrl2(char *hostname, int port, char* path, char* parameters, lon
 		totalBytesRead+=thisReadSize;
 	}
 
-	if (tmpResult==NULL)
+	if (tmpResult==NULL) {
+		closesocket(conn);
 		return NULL;
+	}
 
 	headerLen=getHeaderLength(tmpResult);
 	long contenLen=totalBytesRead-headerLen;

@@ -147,7 +147,7 @@ void constants::printInfo()
 
 	if (item_time>=0) {
 		s_floor->Render(80, 288);
-		GfxFont *f=new GfxFont(L"¿¬Ìå_gb2312", 14, true);
+		GfxFont *f=new GfxFont(L"¿¬Ìå", 14, true);
 		f->Print(108, 308, L"%d", item_time);
 		delete f;
 	}
