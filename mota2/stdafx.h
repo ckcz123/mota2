@@ -13,6 +13,7 @@
 #include <ctime>
 #include <string>
 #include <vector>
+#include <winsock2.h>
 #include <io.h>
 #include <thread>
 #include <sstream>

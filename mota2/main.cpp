@@ -138,7 +138,7 @@ void showMessage(const wchar_t *s) // 显示提示
 	s_temp=new hgeSprite(consts.ht_skin, 0, 0, 128, 128);
 	s_temp->SetColor(0xBBFFFFFF);
 	s_temp->RenderStretch(16+consts.ScreenLeft, consts.map_height*32-160, consts.map_width*32+consts.ScreenLeft-16, consts.map_height*32-8);
-	GfxFont *f=new GfxFont(L"楷体", 22);
+	GfxFont *f=new GfxFont(L"楷体_gb2312", 22);
 	f->Print(16+consts.ScreenLeft+8, consts.map_height*32-160+8, L"%s", s);
 	delete f;
 	delete s_temp;
@@ -149,7 +149,7 @@ void showMax(const wchar_t *s)
 	s_temp=new hgeSprite(consts.ht_skin, 0, 0, 128, 128);
 	s_temp->SetColor(0xBBFFFFFF);
 	s_temp->RenderStretch(16+consts.ScreenLeft, consts.map_height*32-400, consts.map_width*32+consts.ScreenLeft-16, consts.map_height*32-8);
-	GfxFont *f=new GfxFont(L"楷体", 22);
+	GfxFont *f=new GfxFont(L"楷体_gb2312", 22);
 	f->Print(16+consts.ScreenLeft+8, consts.map_height*32-400+8, L"%s", s);
 	delete f;
 	delete s_temp;

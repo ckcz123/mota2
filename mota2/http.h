@@ -1,11 +1,5 @@
 #pragma once
 
-#include <windows.h>
-#include <string>
-#include <stdio.h>
-
-using std::string;
-
 #pragma comment(lib,"ws2_32.lib")
 
 class Http {

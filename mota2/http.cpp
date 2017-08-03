@@ -2,7 +2,7 @@
 
 Http::Http() {
 	strcpy_s(server, "47.93.40.127");
-	port=23456;
+	port=80;
 }
 
 char* Http::get(char* host, int port, char* path, char* parameters)
@@ -107,7 +107,7 @@ char* Http::readUrl2(char *hostname, int port, char* path, char* parameters, lon
 	else
 		strcat_s(sendBuffer, "POST ");
 	strcat_s(sendBuffer, path);
-	strcat_s(sendBuffer, " HTTP/1.0\r\n");
+	strcat_s(sendBuffer, " HTTP/1.1\r\n");
 	strcat_s(sendBuffer, "Host: ");
 	strcat_s(sendBuffer, hostname);
 	strcat_s(sendBuffer, "\r\n");

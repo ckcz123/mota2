@@ -147,7 +147,7 @@ void constants::printInfo()
 
 	if (item_time>=0) {
 		s_floor->Render(80, 288);
-		GfxFont *f=new GfxFont(L"¿¬Ìå", 14, true);
+		GfxFont *f=new GfxFont(L"¿¬Ìå_gb2312", 14, true);
 		f->Print(108, 308, L"%d", item_time);
 		delete f;
 	}
@@ -164,7 +164,7 @@ void constants::doUpload()
 {
 	char url[200];
 	int time=item_time; if (time<0) time=0;
-	sprintf_s(url, "/upload?score=%d&hp=%d&atk=%d&def=%d&times=%d", hero.getScore(), hero.getHP(), hero.getAtk(),
+	sprintf_s(url, "/service/mota2/rank.php?action=upload&score=%d&hp=%d&atk=%d&def=%d&times=%d", hero.getScore(), hero.getHP(), hero.getAtk(),
 		hero.getDef(), time);
 
 	char* output=http.get(http.server, http.port, url, NULL);
@@ -199,7 +199,7 @@ void constants::getRank()
 
 void constants::doGetRank()
 {
-	char* output=http.get(http.server, http.port, "/top", NULL);
+	char* output=http.get(http.server, http.port, "/service/mota2/rank.php?action=top", NULL);
 	if (output!=NULL) {
 		string text(output);
 		stringstream stream;
