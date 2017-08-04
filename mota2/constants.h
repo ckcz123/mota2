@@ -5,8 +5,8 @@
 
 struct savedata
 {
-	int hp, atk, def;
-	void init(int _hp, int _atk, int _def) { hp=_hp; atk=_atk; def=_def; }
+	int level, hp, atk, def;
+	void init(int _level, int _hp, int _atk, int _def) { level=_level; hp=_hp; atk=_atk; def=_def; }
 };
 
 struct record
@@ -20,14 +20,15 @@ class constants
 {
 public:
 	static const int MESSAGE_NONE=0;
-	static const int MESSAGE_RESTART=1;
-	static const int MESSAGE_SAVE=2;
-	static const int MESSAGE_LOAD=3;
-	static const int MESSAGE_WIN=4;
-	static const int MESSAGE_ITEM=5;
-	static const int MESSAGE_RANK=6;
-	static const int MESSAGE_HINT=7;
-	static const int MESSAGE_POINT=8;
+	static const int MESSAGE_START=1;
+	static const int MESSAGE_RESTART=2;
+	static const int MESSAGE_SAVE=3;
+	static const int MESSAGE_LOAD=4;
+	static const int MESSAGE_WIN=5;
+	static const int MESSAGE_ITEM=6;
+	static const int MESSAGE_RANK=7;
+	static const int MESSAGE_HINT=8;
+	static const int MESSAGE_POINT=9;
 
 	constants();
 	void init();
@@ -45,6 +46,9 @@ public:
 	void doUpload();
 	void getRank();
 	void doGetRank();
+
+	// 难度级别，1简单2普通3困难
+	int level;
 
 	int msg;
 	vector<wstring> hint;

@@ -25,6 +25,7 @@ void constants::init()
 	isMyTurn=true;
 	beatStarted=false;
 	max=0;
+	level=0;
 	for (int i=0; i<100; i++) sd[i].hp=0;
 }
 void constants::loadResources()
@@ -143,28 +144,45 @@ void constants::printInfo()
 
 	// print book & item
 	if (book)
-		s_enemyinfo->Render(24, 288);
+		s_enemyinfo->Render(24, 248);
 
 	if (item_time>=0) {
-		s_floor->Render(80, 288);
+		s_floor->Render(80, 248);
 		GfxFont *f=new GfxFont(L"楷体", 14, true);
-		f->Print(108, 308, L"%d", item_time);
+		f->Print(108, 268, L"%d", item_time);
 		delete f;
 	}
+
+	GfxFont *f=new GfxFont(L"楷体", 24, true);
+	if (level==1) {
+		f->SetColor(0xFF00FF00);
+		f->Print(64, 356, L"简单难度");
+	}
+	else if (level==2) {
+		f->SetColor(0xFF96CDCD);
+		f->Print(64, 356, L"普通难度");
+	}
+	else if (level==3) {
+		f->SetColor(0xFFFF0000);
+		f->Print(64, 356, L"困难难度");
+	}
+	delete f;
 
 }
 
 void constants::upload()
 {
-	thread t1(&constants::doUpload, this);
-	t1.detach();
+	if (level==3) {
+		thread t1(&constants::doUpload, this);
+		t1.detach();
+	}
 }
 
 void constants::doUpload()
 {
 	char url[200];
 	int time=item_time; if (time<0) time=0;
-	sprintf_s(url, "/service/mota2/rank.php?action=upload&score=%d&hp=%d&atk=%d&def=%d&times=%d", hero.getScore(), hero.getHP(), hero.getAtk(),
+	sprintf_s(url, "/service/mota/mota2_rank.php?action=upload&score=%d&hp=%d&atk=%d&def=%d&times=%d", hero.getScore(), hero.getHP(), hero.getAtk(),
 		hero.getDef(), time);
 
 	char* output=http.get(http.server, http.port, url, NULL);
@@ -199,7 +217,7 @@ void constants::getRank()
 
 void constants::doGetRank()
 {
-	char* output=http.get(http.server, http.port, "/service/mota2/rank.php?action=top", NULL);
+	char* output=http.get(http.server, http.port, "/service/mota/mota2_rank.php?action=top", NULL);
 	if (output!=NULL) {
 		string text(output);
 		stringstream stream;
@@ -222,20 +240,20 @@ void constants::doGetRank()
 
 void constants::save(FILE* f)
 {
-	fprintf_s(f, "%d %d %d %d %d %d %.2f\n", map_width, map_height, total_point, book?1:0, item_time, step, playtime);
+	fprintf_s(f, "%d %d %d %d %d %d %d %.2f\n", map_width, map_height, level, total_point, book?1:0, item_time, step, playtime);
 }
 
 void constants::load(FILE* f)
 {
 	int _book;
-	fscanf_s(f, "%d %d %d %d %d %d %f", &map_width, &map_height, &total_point, &_book, &item_time, &step, &playtime);
+	fscanf_s(f, "%d %d %d %d %d %d %d %f", &map_width, &map_height, &level, &total_point, &_book, &item_time, &step, &playtime);
 	book=_book==1;
-	moving=false;
 }
 
 void constants::load(constants* another) {
 	map_width = another->map_width;
 	map_height = another->map_height;
+	level = another->level;
 	total_point = another->total_point;
 	book = another->book;
 	item_time= another->item_time;

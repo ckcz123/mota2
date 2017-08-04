@@ -67,7 +67,7 @@ void loadsave()
 			else {
 				tmpcon.load(savefile);
 				tmphero.load(savefile);
-				consts.sd[i].init(tmphero.getHP(), tmphero.getAtk(), tmphero.getDef());
+				consts.sd[i].init(tmpcon.level, tmphero.getHP(), tmphero.getAtk(), tmphero.getDef());
 				fclose(savefile);
 				remove(tmp);
 			}
@@ -160,8 +160,9 @@ void init(bool restart=false)
 	consts.init();
 	hero.init();
 	map_floor[0].init();
-	if (restart)
-		consts.setMsg(L"游戏已重新开始！");
+	// if (restart)
+	//	consts.setMsg(L"游戏已重新开始！");
+	consts.msg=consts.MESSAGE_START;
 }
 bool frameFunc()
 {
@@ -193,6 +194,27 @@ bool frameFunc()
 		consts.item_choose=0;
 		consts.item_point=0;
 		consts.msg=consts.MESSAGE_ITEM;
+	}
+
+	if (consts.msg==consts.MESSAGE_START)
+	{
+
+		if (consts.hge->Input_GetKeyState(HGEK_1))
+		{
+			consts.level=1;
+			consts.msg=consts.MESSAGE_NONE;
+		}
+		else if (consts.hge->Input_GetKeyState(HGEK_2))
+		{
+			consts.level=2;
+			consts.msg=consts.MESSAGE_NONE;
+		}
+		else if (consts.hge->Input_GetKeyState(HGEK_3))
+		{
+			consts.level=3;
+			consts.msg=consts.MESSAGE_NONE;
+		}
+
 	}
 
 	// 提示消息
@@ -321,7 +343,6 @@ bool frameFunc()
 	// 胜利or失败
 	if (consts.msg==consts.MESSAGE_WIN&&consts.hge->Input_GetKeyState(HGEK_ENTER)) {
 		init();
-		consts.msg=consts.MESSAGE_NONE;
 	}
 
 	// 重新开始
@@ -355,23 +376,29 @@ bool renderFunc()
 
 	switch (consts.msg)
 	{
+	case consts.MESSAGE_START:
+		showMessage(L"欢迎来到此塔！感谢您的大力支持！\n请选择难度：\n\n[1] 简单\n[2] 普通\n[3] 困难");
+		break;
 	case consts.MESSAGE_RESTART:
-		showMessage(L"你想重新开始吗？\n\n[ENTER] 重新开始\n[ESC] 返回游戏");
-		break;;
+		showMessage(L"您想重新开始吗？\n\n[ENTER] 重新开始\n[ESC] 返回游戏");
+		break;
 	case consts.MESSAGE_WIN:
 	{
 		/* win */
 		wchar_t ss[200];
 
+		if (consts.level!=3) {
+			wsprintf(ss, L"恭喜通关！您的分数是 %d。\n简单或普通难度将不记录您的成绩。\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
+		}
 		// uploading..
-		if (consts.max==0) {
-			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n正在上传成绩... 请稍后\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
+		else if (consts.max==0) {
+			wsprintf(ss, L"恭喜通关！您的分数是 %d。\n正在上传成绩... 请稍后\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
 		}
 		else if (consts.max==-1) {
-			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n成绩上传失败，请检查网络设置。\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
+			wsprintf(ss, L"恭喜通关！您的分数是 %d。\n成绩上传失败，请检查网络设置。\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore());
 		}
 		else {
-			wsprintf(ss, L"恭喜通关！你的分数是 %d。\n当前排名%s，当前MAX %d。\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore(), consts.rank, consts.max);
+			wsprintf(ss, L"恭喜通关！您的分数是 %d。\n当前排名%s，当前MAX %d。\n（P键可查看当前MAX记录信息。）\n欢迎截图到发布帖下进行炫耀！\n\n[ENTER] 重新开始", hero.getScore(), consts.rank, consts.max);
 		}
 
 		showMessage(ss);
@@ -386,8 +413,10 @@ bool renderFunc()
 		if (consts.sd[consts.wanttosave].hp<0)
 			wsprintf(ss, L"存档到文件 %d\n(空白)\n\n[↑] [↓] 更改存档位置\n[ENTER] 确认存档\n[ESC] 取消", consts.wanttosave+1);
 		else
-			wsprintf(ss, L"存档到文件 %d\n(HP%d/A%d/D%d)\n\n[↑] [↓] 更改存档位置\n[ENTER] 确认存档\n[ESC] 取消",
-					consts.wanttosave+1, consts.sd[consts.wanttosave].hp,
+			wsprintf(ss, L"存档到文件 %d\n(%s/HP%d/A%d/D%d)\n\n[↑] [↓] 更改存档位置\n[ENTER] 确认存档\n[ESC] 取消",
+					consts.wanttosave+1, 
+					consts.sd[consts.wanttosave].level==1?L"简单":consts.sd[consts.wanttosave].level==2?L"普通":consts.sd[consts.wanttosave].level==3?L"困难":L"无难度",
+					consts.sd[consts.wanttosave].hp,
 					consts.sd[consts.wanttosave].atk, consts.sd[consts.wanttosave].def);
 		showMessage(ss);
 		break;
@@ -398,8 +427,10 @@ bool renderFunc()
 		if (consts.sd[consts.wanttosave].hp<0)
 			wsprintf(ss, L"读取存档 %d\n(无效的存档)\n\n[↑] [↓] 更改读档位置\n[ENTER] 确认读档\n[ESC] 取消", consts.wanttosave+1);
 		else
-			wsprintf(ss, L"读取存档 %d\n(HP%d/A%d/D%d)\n\n[↑] [↓] 更改读档位置\n[ENTER] 确认读档\n[ESC] 取消",
-					consts.wanttosave+1, consts.sd[consts.wanttosave].hp,
+			wsprintf(ss, L"读取存档 %d\n(%s/HP%d/A%d/D%d)\n\n[↑] [↓] 更改读档位置\n[ENTER] 确认读档\n[ESC] 取消",
+					consts.wanttosave+1, 
+					consts.sd[consts.wanttosave].level==1?L"简单":consts.sd[consts.wanttosave].level==2?L"普通":consts.sd[consts.wanttosave].level==3?L"困难":L"无难度",
+					consts.sd[consts.wanttosave].hp,
 					consts.sd[consts.wanttosave].atk, consts.sd[consts.wanttosave].def);
 		showMessage(ss);
 		break;
@@ -408,10 +439,10 @@ bool renderFunc()
 	{
 		wchar_t ss[200];
 		if (consts.item_choose==0) {
-			wsprintf(ss, L"你已使用该道具%d次。\n\n请选择一项进行支付：\n[1] 攻击力\n[2] 防御力\n[ESC] 取消", consts.item_time);
+			wsprintf(ss, L"您已使用该道具%d次。\n\n请选择一项进行支付：\n[1] 攻击力\n[2] 防御力\n[ESC] 取消", consts.item_time);
 		}
 		else if (consts.item_choose==1 || consts.item_choose==2) {
-			wsprintf(ss, L"你要支付%s的点数为：%d\n\n[↑][↓][←][→] 更改数值\n[ENTER] 确认支付\n[ESC] 取消", 
+			wsprintf(ss, L"您要支付%s的点数为：%d\n\n[↑][↓][←][→] 更改数值\n[ENTER] 确认支付\n[ESC] 取消", 
 				consts.item_choose==1?L"攻击力":L"防御力", consts.item_point);
 		}
 		else break;
@@ -421,7 +452,8 @@ bool renderFunc()
 	case consts.MESSAGE_POINT:
 	{
 		wchar_t ss[200];
-		wsprintf(ss, L"所有怪物攻防上升%d。\n\n请选择一项：\n[1] 生命值+%d\n[2] 攻击力+%d\n[3] 防御力+%d", consts.curr_point/3,
+		wsprintf(ss, L"所有怪物攻防上升%d。\n\n请选择一项：\n[1] 生命值+%d\n[2] 攻击力+%d\n[3] 防御力+%d", 
+			consts.level==1?(int)(consts.curr_point/3.3):consts.level==2?(int)(consts.curr_point/3.15):consts.level==3?consts.curr_point/3:0,
 			150*consts.curr_point, consts.curr_point, consts.curr_point);
 		showMessage(ss);
 		break;

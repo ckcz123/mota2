@@ -102,7 +102,13 @@ bool c_map_point::canMove(int f)
 				}
 				else {
 					consts.curr_point = point;
-					consts.total_point += point / 3;
+
+					if (consts.level==1)
+						consts.total_point += (int)(point / 3.3);
+					else if (consts.level==2)
+						consts.total_point += (int)(point / 3.15);
+					else if (consts.level==3)
+						consts.total_point += point / 3;
 					consts.msg = consts.MESSAGE_POINT;
 
 					// 全部杀完？
@@ -130,12 +136,23 @@ bool c_map_point::canMove(int f)
 			if (npc.getId() == 41) {
 				
 				consts.book = true;
+
+				wchar_t s1[500] = L"具体而言，当你杀死一个点数为X的\n怪物后，你可以选择加X点攻击、X\n点防御或150X点生命值，同时地图上\n所有怪物攻防都将上升。\n\n";
+
+				if (consts.level==1)
+					wcscat_s(s1, L"简单难度下上升X/3.3（向下取整）。");
+				else if (consts.level==2)
+					wcscat_s(s1, L"普通难度下上升X/3.15（向下取整）。");
+				else if (consts.level==3)
+					wcscat_s(s1, L"困难难度下上升X/3（向下取整）。");
+
 				const wchar_t* msg[50] = {
 					L"又是一个来挑战这个塔的勇士么？来\n吧试试看看你的成绩是多少！\n下面是对本塔的一些说明和提示，请\n仔细阅读。\n\n[ENTER] 下一页",
 					L"怪物手册我已经给你了，请收好。\n\n将鼠标移动到怪物上可以看到其详细\n属性，括号外是当前数值，括号内的\na+b则意味着原数值为a，而变化的数\n值为b。",
 					L"本塔共36+1个怪，清空外围36个怪物\n后机关门会打开。\n\n当你每打死一个怪物就可以进行攻击\n、防御或生命值的加点，同时地图上\n所有怪物的攻防属性都会发生变化。",
-					L"具体而言，当你杀死一个点数为X的\n怪物后，你可以选择加X点攻击、X\n点防御或150X点生命值，同时地图上\n所有怪物攻防上升X/3（向下取整）。\n\n当你最终战胜Boss后将计算分数。",
-					L"得分计算公式：\n分数=150*(攻击+防御)+生命\n\n你的成绩将上传到服务器，和大家进\n行比较，P键可查看当前MAX值。\n欢迎众大佬刷刷MAX！",
+					// L"具体而言，当你杀死一个点数为X的\n怪物后，你可以选择加X点攻击、X\n点防御或150X点生命值，同时地图上\n所有怪物攻防上升X/3（向下取整）。\n\n当你最终战胜Boss后将计算分数。",
+					s1,
+					L"得分计算公式：\n分数=150*(攻击+防御)+生命\n\n困难难度下你的成绩将上传到服务器\n进行排名，P键可查看当前MAX值。\n欢迎众大佬刷刷MAX！",
 					L"快捷键：\nS/L: 存/读档\nR: 重新开始\nX: 使用道具\nP: 查看当前MAX\nM: 音乐开关",
 					L"本塔由Sky_天空的梦使用C++编写而成\n，代码开源在：\nhttps://github.com/ckcz123/mota2/\n\n如有问题，请于发布帖下进行回复和\n反馈，谢谢支持！加油！"
 				};
